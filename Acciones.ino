@@ -3,14 +3,16 @@ void Acciones()
 
   if (inicie >= 1) {                                                                     // Condicional que limita entrar a esta seccion si no se inicio el juego
 
+    Blink_OK_SLOW();
+
 
     //Chequeo de cliente
 
     WiFiClient client = server.available();                                               //Admite conexion
-    client.setTimeout(30);                                                                //Timeout del cliente en ms
+    client.setTimeout(10);                                                                //Timeout del cliente en ms
     peticion = client.readStringUntil('\r');                                              //Lectura del String
     Serial.println(peticion);
-                                                                           //Flush de datos
+    client.flush();                                                                       //Flush de datos
 
     if (peticion.indexOf("/req/") != -1)      {                                          //Condiciono que la instruccion lleve un /req/ para evitar ruidos y falsos positivos
 
@@ -50,40 +52,50 @@ void Acciones()
       memset(estado_buffer, 0, sizeof(estado_buffer));                                 //Limpio buffer
 
     }
-    //Peltier
-    if (strcmp(estado_buffer, pelt) == 0 and tiempo <= 10)                             //compara que el buffer sea igual a la constante pelt (para el peltier)
+    Serial.println("Antes del IF");
+    Serial.println(millis()) ;
+      Serial.println(treq2 *2 );
+      
+    if (treq2 * 2 <= millis()) {
+      
+    Serial.println("Despues del IF");
+      Serial.println(millis()) ;
+      Serial.println(treq2 *2 );
+      
+      if (strcmp(estado_buffer, pelt) == 0 and tiempo <= 10)                             //compara que el buffer sea igual a la constante pelt (para el peltier)
 
-    {
-      Serial.println("Pase por Encendido Peltier");
-      tpelt = tiempo * 1000;
-      Tref_pelt = millis();
-      digitalWrite(Cale, HIGH);                                                        //Enciende Peltier
-      Serial.println ("Encendiendo Peltier");
-      Serial.println (tiempo);
-      treq2 = tpelt + Tref_pelt;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido el peltier
-      tiempo = 0;
-      Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
-      client.println("HTTP/1.1 200 OK");
-      client.stop();
-      memset(estado_buffer, 0, sizeof(estado_buffer));
+      {
 
-    }
-    ///Peltier Tempo
-    if (strcmp(estado_buffer, pelt) == 0 and tiempo > 10)                             //Limita que no se pueda poner mas de XX Segundos el peltier
+        Serial.println("Pase por Encendido Peltier");
+        tpelt = tiempo * 1000;
+        Tref_pelt = millis();
+        digitalWrite(Cale, HIGH);                                                        //Enciende Peltier
+        Serial.println ("Encendiendo Peltier");
+        Serial.println (tiempo);
+        treq2 = tpelt + Tref_pelt;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido el peltier
+        tiempo = 0;
+        Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
+        client.println("HTTP/1.1 200 OK");
+        client.stop();
+        memset(estado_buffer, 0, sizeof(estado_buffer));
 
-    {
-      Serial.println("Pase por Encendido Peltier con Limite");
-      Tref_pelt = millis();
-      digitalWrite(Cale, HIGH);                                                       //Enciendo Peltier
-      Serial.println("No se puede mas de 10 Segundos");
-      Serial.println("Encendiendo Peltier X Segundos");
-      treq2 = (10 * 1000) + Tref_pelt;
-      tiempo = 0;
-      Spelt = 1;
-      client.println("HTTP/1.1 200 OK");
-      client.stop();
-      memset(estado_buffer, 0, sizeof(estado_buffer));
+      }
+      ///Peltier Tempo
+      if (strcmp(estado_buffer, pelt) == 0 and tiempo > 7) {                            //Limita que no se pueda poner mas de XX Segundos el peltier
+        CDOn = millis();
+        Serial.println("Pase por Encendido Peltier con Limite");
+        Tref_pelt = millis();
+        digitalWrite(Cale, HIGH);                                                       //Enciendo Peltier
+        Serial.println("No se puede mas de 10 Segundos");
+        Serial.println("Encendiendo Peltier X Segundos");
+        treq2 = (7 * 1000) + Tref_pelt;
+        tiempo = 0;
+        Spelt = 1;
+        client.println("HTTP/1.1 200 OK");
+        client.stop();
+        memset(estado_buffer, 0, sizeof(estado_buffer));
 
+      }
     }
     //Valv
     if (strcmp(estado_buffer, valv) == 0 and tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
@@ -106,13 +118,13 @@ void Acciones()
       memset(estado_buffer, 0, sizeof(estado_buffer));
     }
 
-    if (strcmp(estado_buffer, fin) == 0) {                             //Compara que el buffer sea igual a la constante fin para dar por finalizado el juego y apagar todo.
+    if (strcmp(estado_buffer, END) == 0) {                             //Compara que el buffer sea igual a la constante fin para dar por finalizado el juego y apagar todo.
 
       digitalWrite(Aire, LOW);                                                        //Apago Bomba
       digitalWrite(Cale, LOW);                                                        //Apago peltier
       digitalWrite(Valv, LOW);                                                        //Abro valvula
       Serial.println("FIN DEL JUEGO");
-      finish = 1;                                                                     //Flag de final
+
       interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
       inicie = 0;                                                                     //Vacio Flag de que esta iniciado
       START = 0;                                                                      //Vacio Flag que el juego esta corriendo
@@ -128,7 +140,7 @@ void Acciones()
       client.print("<h1>C -FIN DEL JUEGO");
       client.print("</h1>");
       client.print("<h1></hl>");
-      client.stop();
+
     }
 
     if (strcmp(estado_buffer, sta) == 0) {
@@ -146,13 +158,14 @@ void Acciones()
       client.print("BOMBA: ");
       client.println(Spump);
       client.print("VALVULA: ");
-      client.print(Svalv);
+      client.println(Svalv);
+      client.print("STATUS ACTUAL DEL JUEGO: ");
+      client.print(IND);
       client.print("</h1>");
       memset(estado_buffer, 0, sizeof(estado_buffer));
-      client.stop();
-    }
 
-    client.println("HTTP/1.1 200 OK");
+
+    }
   }
 
 }

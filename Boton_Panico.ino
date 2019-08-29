@@ -6,7 +6,9 @@ void Boton_Panico() {
   }
   
   if(PANIC==1){
-    
+
+    inicie=0;
+    START=0;
     WiFiClient client = server.available();
   client.setTimeout(30);
 
@@ -26,6 +28,8 @@ void Boton_Panico() {
     client.println("<html>");
     client.print("<h1>D - PANIC");
     client.print("</h1>");
+    IND="D";
+    
 
   }
 
