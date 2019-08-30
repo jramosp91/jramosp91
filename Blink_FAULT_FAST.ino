@@ -1,20 +1,20 @@
-void Blink_FAULT_FAST(){
+void Blink_FAULT_FAST() {
 
-  if(digitalRead(Cale) == 1){
-    
-       if (blinkFS - blinkFE >= BLINKF) {
-     
+  if (digitalRead(Cale) == 1) {
+
+    if (blinkFS - blinkFE >= BLINKF) {
+
       blinkFE = blinkFS;
-     
+
       if (digitalRead(LEDFAULT) == HIGH) {
         digitalWrite(LEDFAULT, LOW);
-     
+
       } else {
-        
+
         digitalWrite(LEDFAULT, HIGH);
       }
     }
 
-    
-}
+
+  }
 }

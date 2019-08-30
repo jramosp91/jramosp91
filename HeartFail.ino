@@ -29,7 +29,7 @@ char estado_buffer[7];                             //BUFFER DATOS CHAR
 String ret;                                        // SERVER HTTP
 String IND;                                       //String status
 String OUT;
-char Estado;
+String Estado;
 
 //Chars comparativos
 
@@ -56,9 +56,9 @@ int Svalv = 0;                                    // FLAG ESTADO VALV, 0 OFF 1 O
 int RST = 0;                                      // FLAG RESET
 int INICIO = 0;                                   // FLAG DE INICIO
 int PANIC = 0;                                    //FLAG BOTON PANICO
-int Comando = 0;                                  //FLAG QUE SE INGRESO EL COMANDO CORRECTAMENTE 1 SI 0 NO
+int comando = 0;                                  //FLAG QUE SE INGRESO EL COMANDO CORRECTAMENTE 1 SI 0 NO
 int DEBUGMODE = 1 ;                                //MODO DEBUG 1 ON 0 OFF
-const float VER = 0.9111;                             //VERSION
+const float VER = 0.9112;                             //VERSION
 
 //Temporizadores
 
@@ -131,6 +131,7 @@ void Blink_Fault_Slow ();                         //Funcion de blink lento para 
 void Blink_OK_SLOW();                             // Funcion de blink rapido para led amarillo
 void Blink_OK_FAST();                             //Funcion de blink lento para led amarillo
 void JSON();
+
 
 
 void setup() {
@@ -257,15 +258,17 @@ void loop() {                                                               //IN
   blinkFS = millis();
 
   ArduinoOTA.handle();                                                              //invoca si hay que flashear online
-      Reset();                                                                      // Funcion del boton reset
-      Boton_Panico();                                                               //Boton de Start/STOP 
-      CompareInicio();                                                              // Inicio
-      Temp();                                                                       //Proteccion de Temperatura por Sensor
-      Acciones();                                                                   //Funcion Encendido Bomba
-      Bomba_Apagado();                                                              //Funcion Apagado Bomba
-      ApagadoPeltier();                                                             //Funcion Apagado Peltier
-      Blink_FAULT_FAST();                                                           // Funcion de blinking rapido para led rojo
-      Blink_OK_FAST();                                                              //Funcion de blinking rapido para led amarillo
+
+
+  Reset();                                                                      // Funcion del boton reset
+  Boton_Panico();                                                               //Boton de Start/STOP
+  CompareInicio();                                                              // Inicio
+  Temp();                                                                       //Proteccion de Temperatura por Sensor
+  Acciones();                                                                   //Funcion Encendido Bomba
+  Bomba_Apagado();                                                              //Funcion Apagado Bomba
+  ApagadoPeltier();                                                             //Funcion Apagado Peltier
+  Blink_FAULT_FAST();                                                           // Funcion de blinking rapido para led rojo
+  Blink_OK_FAST();                                                              //Funcion de blinking rapido para led amarillo
   memset(estado_buffer, 0, sizeof(estado_buffer));                                  //vacia buffer
 
 }

@@ -5,10 +5,10 @@ void Acciones()
 
     Blink_OK_SLOW();
 
-    Estado = 'B';
+    Estado = "B";
 
     WiFiClient client = server.available();           //Admite conexion
-    client.setTimeout(50);
+    client.setTimeout(300);
     if (client) {
       if (client.connected()) {
 
@@ -37,8 +37,8 @@ void Acciones()
 
         //Bomba
         if (strcmp(estado_buffer, pump) == 0)    {                                           //compara que el buffer sea igual a la constante pump (para la bomba)
-
-
+          OUT = "";
+          comando = 1;
           Serial.println("Pase por Encendido Bomba");
           tbomb = tiempo * 1000;                                                            //Conversion del tiempo en segundos a milisegundos
           digitalWrite(Aire, HIGH);                                                         //Enciende Bomba
@@ -51,16 +51,16 @@ void Acciones()
           Serial.println(treq1);
           tiempo = 0;                                                                      //Vacio la variable tiempo
           Spump = 1;                                                                       //Activo FLAG para encendido de bomba
-          delay(10);
           JSON();
-
           client.println("HTTP/1.1 200 OK");
           Serial.println("ENVIE DATO HTTP");
           client.println("Content-Type: application/json");
+          client.println("Connection: close");
           client.println("");
           client.println(OUT);
+          Serial.println(OUT);
+          delay(2);
           memset(estado_buffer, 0, sizeof(estado_buffer));
-          OUT = "";
 
 
         }
@@ -69,7 +69,8 @@ void Acciones()
 
 
           if (strcmp(estado_buffer, pelt) == 0 and tiempo <= 7)   {                          //compara que el buffer sea igual a la constante pelt (para el peltier)
-
+            OUT = "";
+            comando = 1;
             Serial.println("Pase por Encendido Peltier");
             tpelt = tiempo * 1000;
             Tref_pelt = millis();
@@ -80,21 +81,24 @@ void Acciones()
             tiempo = 0;
             Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
             JSON();
-
             client.println("HTTP/1.1 200 OK");
             Serial.println("ENVIE DATO HTTP");
             client.println("Content-Type: application/json");
+            client.println("Connection: close");
             client.println("");
             client.println(OUT);
-            delay(10);
-            client.stop();
+            Serial.println(OUT);
+            delay(2);
             memset(estado_buffer, 0, sizeof(estado_buffer));
-            OUT = "";
+
+
 
           }
 
           ///Peltier Tempo
           else if (strcmp(estado_buffer, pelt) == 0 and tiempo > 7) {                            //Limita que no se pueda poner mas de XX Segundos el peltier
+            OUT = "";
+            comando = 1;
             CDOn = millis();
             Serial.println("Pase por Encendido Peltier con Limite");
             Tref_pelt = millis();
@@ -104,22 +108,23 @@ void Acciones()
             tiempo = 0;
             Spelt = 1;
             JSON();
-
             client.println("HTTP/1.1 200 OK");
             Serial.println("ENVIE DATO HTTP");
             client.println("Content-Type: application/json");
+            client.println("Connection: close");
             client.println("");
             client.println(OUT);
-            delay(10);
-            client.stop();
+            Serial.println(OUT);
+            delay(2);
             memset(estado_buffer, 0, sizeof(estado_buffer));
 
-            OUT = "";
+
           }
         }
 
-       if (strcmp(estado_buffer, valv) == 0 and tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
-
+        if (strcmp(estado_buffer, valv) == 0 and tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
+          OUT = "";
+          comando = 1;
           digitalWrite(Valv, HIGH);
           Serial.println("Enciendo Valvula");
           Svalv = 1;                                                                       //Flag de Valvula Encendida
@@ -128,16 +133,20 @@ void Acciones()
           client.println("HTTP/1.1 200 OK");
           Serial.println("ENVIE DATO HTTP");
           client.println("Content-Type: application/json");
+          client.println("Connection: close");
           client.println("");
           client.println(OUT);
-          delay(10);
-          client.stop();
-          memset(estado_buffer, 0, sizeof(estado_buffer));
-          OUT = "";
+          Serial.println(OUT);
+          delay(2);
+         memset(estado_buffer, 0, sizeof(estado_buffer));
+
+
 
         }
 
         else  if (strcmp(estado_buffer, valv) == 0 and tiempo == 0) {                             // compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 0 para OFF
+          OUT = "";
+          comando = 1;
           digitalWrite(Valv, LOW);
           Serial.println("Apagado Valvula");
           Svalv = 0;                                                                        //Flag de Valvula Apagada
@@ -146,16 +155,19 @@ void Acciones()
           client.println("HTTP/1.1 200 OK");
           Serial.println("ENVIE DATO HTTP");
           client.println("Content-Type: application/json");
+          client.println("Connection: close");
           client.println("");
           client.println(OUT);
-          delay(10);
-          client.stop();
+          Serial.println(OUT);
+          delay(2);
           memset(estado_buffer, 0, sizeof(estado_buffer));
-          OUT = "";
+
         }
 
         else  if (strcmp(estado_buffer, END) == 0) {                             //Compara que el buffer sea igual a la constante fin para dar por finalizado el juego y apagar todo.
-
+        
+          OUT = "";
+          comando = 1;
           digitalWrite(Aire, LOW);                                                        //Apago Bomba
           digitalWrite(Cale, LOW);                                                        //Apago peltier
           digitalWrite(Valv, LOW);                                                        //Abro valvula
@@ -168,34 +180,44 @@ void Acciones()
           client.println("HTTP/1.1 200 OK");
           Serial.println("ENVIE DATO HTTP");
           client.println("Content-Type: application/json");
+          client.println("Connection: close");
           client.println("");
           client.println(OUT);
-          delay(10);
-          client.stop();
+          Serial.println(OUT);
+          delay(2);
+          client.println(OUT);
           memset(estado_buffer, 0, sizeof(estado_buffer));
-          OUT = "";
+          delay(10000);
+          client.stop();
+
         }
 
         else if (strcmp(estado_buffer, sta) == 0) {
 
+          OUT = "";
+          comando = 1;
           JSON();
 
           client.println("HTTP/1.1 200 OK");
           Serial.println("ENVIE DATO HTTP");
           client.println("Content-Type: application/json");
+          client.println("Connection: close");
           client.println("");
           client.println(OUT);
-          delay(10);
-          client.stop();
+          Serial.println(OUT);
+          delay(2);
+          delay(2);
           memset(estado_buffer, 0, sizeof(estado_buffer));
-          OUT = "";
+
 
         }
+
+
       }
-      client.stop();
+
     }
 
-  }
 
+  }
 
 }

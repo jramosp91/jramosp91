@@ -1,10 +1,6 @@
 void Bomba_Apagado () {
 
   if (digitalRead(Aire) == 1 ) {
-    Serial.println("Pase por Apagado Bomba");
-    Serial.println("Conteo para apagar bomba");
-    Serial.print("LA BOMBA SE APAGA EN: ");
-    Serial.println(treq1);
   }
 
 
@@ -16,7 +12,7 @@ void Bomba_Apagado () {
     Serial.println(Tref_bomba + tbomb);
     Serial.println(millis() - (Tref_bomba + tbomb));
     Spump = 0;
-   // ACTB= 0;
+    // ACTB= 0;
   }
 
 }

@@ -6,7 +6,7 @@ void Boton_Panico() {
   }
 
   if (PANIC == 1) {
-    Estado = 'D';
+    Estado = "D";
     inicie = 0;
     START = 0;
 
@@ -24,9 +24,9 @@ void Boton_Panico() {
     client.println("HTTP/1.1 200 OK");
     Serial.println("ENVIE DATO HTTP");
     client.println("Content-Type: application/json");
-    client.println("");
+    client.println("Connection: close");
     client.println(OUT);
-    delay(5);
+    delay(10000);
     client.stop();
     memset(estado_buffer, 0, sizeof(estado_buffer));
     OUT = "";

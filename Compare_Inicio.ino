@@ -2,16 +2,14 @@ void CompareInicio()
 {
 
   if (interruptCounter == 0) {
-    Estado = 'A';
+    Estado = "A";
     Serial.println("ESTOY EN INICIO");
-
     WiFiClient client = server.available();           //Admite conexion
-    client.setTimeout(50);
+    client.setTimeout(200);
     if (client) {
 
 
       if (client.connected()) {
-
 
         peticion = client.readStringUntil('\r');
         client.flush();
@@ -35,37 +33,51 @@ void CompareInicio()
 
           if (strcmp(estado_buffer, ini) == 0 or interruptCounter == 1) {
 
+            Estado = "B";
+            comando = 1;
             START = 1;
             inicie = 1;
             interruptCounter = 1;
             INICIO = 0;
             JSON();
+
             client.println("HTTP/1.1 200 OK");
             Serial.println("ENVIE DATO HTTP");
             client.println("Content-Type: application/json");
             client.println("");
             client.println(OUT);
-            delay(10);
-            memset(estado_buffer, 0, sizeof(estado_buffer));
-            }
+            Serial.println(OUT);
+            delay(2);
+            OUT = "";
+
+          }
 
 
           else if (strcmp(estado_buffer, sta) == 0) {
-
+            comando = 1;
             JSON();
             client.println("HTTP/1.1 200 OK");
             Serial.println("ENVIE DATO HTTP");
             client.println("Content-Type: application/json");
-            client.println("");
             client.println(OUT);
-            delay(10);
-            memset(estado_buffer, 0, sizeof(estado_buffer));
+            delay(2);
+            OUT = "";
+
+
+
+          }
+
+          else if (interruptCounter == 0) {
+            comando = 0;
+            client.println("HTTP/1.1 200 OK");
+            Serial.println("ENVIE DATO HTTP");
+            client.println("Content-Type: application/json");
+            client.println(OUT);
+            delay(2);
             OUT = "";
           }
         }
-
       }
-      client.stop();
     }
   }
 }

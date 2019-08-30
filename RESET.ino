@@ -1,6 +1,6 @@
 void Reset ()
 {
- if(inicie ==1 or PANIC ==1) {
+  if (inicie == 1 or PANIC == 1) {
 
     if (digitalRead(RESET) == 0 and RST == 0)
     {
