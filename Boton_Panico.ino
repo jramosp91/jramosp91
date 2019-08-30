@@ -1,35 +1,36 @@
 void Boton_Panico() {
 
- 
-  if(interruptCounter >= 2 and START >= 1) {
-    PANIC=1;
+
+  if (interruptCounter >= 2 and START >= 1) {
+    PANIC = 1;
   }
-  
-  if(PANIC==1){
 
-    inicie=0;
-    START=0;
+  if (PANIC == 1) {
+    Estado = 'D';
+    inicie = 0;
+    START = 0;
+
     WiFiClient client = server.available();
-  client.setTimeout(30);
+    client.setTimeout(30);
 
- Serial.println("Pase por boton del panico");
+    Serial.println("Pase por boton del panico");
     digitalWrite(Aire, LOW);
     digitalWrite(Cale, LOW);
     digitalWrite(Valv, LOW);
     digitalWrite(LEDOK, LOW);
     digitalWrite(LEDFAULT, HIGH);
     Serial.println("");
-   
-
+    JSON();
     client.println("HTTP/1.1 200 OK");
-    client.println("");                                     //No olvidar esta línea de separación
-    client.println("<!DOCTYPE HTML>");
-    client.println("<meta charset='UTF-8'>");
-    client.println("<html>");
-    client.print("<h1>D - PANIC");
-    client.print("</h1>");
-    IND="D";
-    
+    Serial.println("ENVIE DATO HTTP");
+    client.println("Content-Type: application/json");
+    client.println("");
+    client.println(OUT);
+    delay(5);
+    client.stop();
+    memset(estado_buffer, 0, sizeof(estado_buffer));
+    OUT = "";
+
 
   }
 

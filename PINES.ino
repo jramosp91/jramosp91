@@ -24,10 +24,10 @@ void PINES() {
   pinMode(Valv, OUTPUT);
   digitalWrite(Valv, LOW);
 
-  //Serial COM
-  Serial.begin(9600);
+//SERIAL ON
+Serial.begin(9600);
 
-  //LEDOK
+   //LEDOK
   pinMode(LEDOK, OUTPUT);
   digitalWrite(LEDOK, LOW);
 
