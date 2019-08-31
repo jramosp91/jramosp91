@@ -8,6 +8,7 @@ void Boton_Panico() {
   if (PANIC == 1) {
     Estado = "D";
     inicie = 0;
+    interruptCounter=3;
     Serial.println("Pase por boton del panico");
     digitalWrite(Aire, LOW);
     digitalWrite(Cale, LOW);

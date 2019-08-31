@@ -94,7 +94,7 @@ long starttime = 0;                                  // TIEMPO INICIO DEBOUNCE
 //////////////////////////
 /////////WIFI AP//////////
 //////////////////////////
-const char* ssidAP = "INTERATICA19002002";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
+const char* ssidAP = "INTERATICA19002004";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
 const char* passwordAP = "interatica-4DVR";             //Definimos la contraseña de nuestro servidor
 ESP8266WebServer server(80);                            //Definimos el puerto de comunicaciones
 
@@ -102,7 +102,7 @@ ESP8266WebServer server(80);                            //Definimos el puerto de
 //////WIFI STA///////
 ////////////////////
 
-const char ssidSTA[] = "DEBUG19002002";
+const char ssidSTA[] = "DEBUG19002004";
 const char passwordSTA[] = "interatica-4DVR";
 
 
@@ -158,6 +158,7 @@ void handlePump() {
     Serial.println("Pase por Encendido Bomba");
     tbomb = tiempo * 1000;                                                            //Conversion del tiempo en segundos a milisegundos
     digitalWrite(Aire, HIGH);                                                         //Enciende Bomba
+    digitalWrite(Valv, HIGH);
     Tref_bomba = millis();                                                            //Activa le referencia del tiempo
     Serial.println(Tref_bomba);
     Serial.println ("Encendiendo Bomba");
@@ -229,11 +230,14 @@ void handleValve() {
 }
 
 void handleInicio() {
-  Estado = "B";
-  comando = 1;
-  inicie = 1;
-  interruptCounter = 1;
-  INICIO = 0;
+  if (PANIC = ! 1) {
+    Estado = "B";
+    comando = 1;
+    inicie = 1;
+    interruptCounter = 1;
+    INICIO = 0;
+  }
+
   JSON();
   server.send(200, "text/plain", OUT);
 
@@ -241,13 +245,18 @@ void handleInicio() {
 }
 
 void handleFin() {
-  comando = 1;
-  digitalWrite(Aire, LOW);                                                        //Apago Bomba
-  digitalWrite(Cale, LOW);                                                        //Apago peltier
-  digitalWrite(Valv, LOW);                                                        //Abro valvula
-  Serial.println("FIN DEL JUEGO");
-  interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
-  inicie = 0;                                                                     //Vacio Flag de que esta iniciado
+  
+  if (PANIC = ! 1) {
+    Estado = "A";
+    comando = 1;
+    digitalWrite(Aire, LOW);                                                        //Apago Bomba
+    digitalWrite(Cale, LOW);                                                        //Apago peltier
+    digitalWrite(Valv, LOW);                                                        //Abro valvula
+    Serial.println("FIN DEL JUEGO");
+    interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
+    inicie = 0;                                                                     //Vacio Flag de que esta iniciado
+  }
+  
   JSON();
   server.send(200, "text/plain", OUT);
 

@@ -9,9 +9,7 @@ void ApagadoPeltier() {
     digitalWrite(Cale, LOW);
     digitalWrite(LEDFAULT, LOW);
     Spelt=0;
-    treq2=0;
-   // ACTP= 0;
-   
+    
   }
 
 }
