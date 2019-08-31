@@ -24,13 +24,11 @@ void Reset ()
       finish = 0;
       interruptCounter = 0;
       inicie = 0;
-      START = 0;
       RST = 0;
       PANIC = 0;
       digitalWrite(LEDOK, LOW);
       digitalWrite(LEDFAULT, HIGH);
       delay(2000);
-      interruptCounter = 0;
       digitalWrite(LEDFAULT, LOW);
     }
 

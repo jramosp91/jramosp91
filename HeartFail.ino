@@ -30,18 +30,9 @@ String ret;                                        // SERVER HTTP
 String IND;                                       //String status
 String OUT;
 String Estado;
-String VERSION = "0.9113";                             //VERSION
-//Chars comparativos
+String VERSION = "0.9114";                             //VERSION
 
-char pump[5] = "pump";                             //NOMBRE PETICION BOMBA
-char valv[5] = "valv";                             // NOMBRE PETICION VALVULA
-char pelt[5] = "pelt";                             // NOMBRE PETICION PELTIER
-char END[4] = "end";                               // NOMBRE PETICION FINAL
-char ini[4] = "ini";                              // NOOMBRE PETICION INICIO
-char sta[4] = "sta";                              // NOMBRE STATUS
-
-
-//interrupcione
+//interrupciones
 
 volatile byte interruptCounter = 0;               // contador de interrupcion
 
@@ -49,7 +40,6 @@ volatile byte interruptCounter = 0;               // contador de interrupcion
 
 int inicie = 0;                                   // FLAG INICIALIZACION
 int finish = 0;                                   // FLAG FINAL DEL JUEGO
-int START;                                        // FLAG QUE EL JUEGO EMPEZO
 int Spump = 0;                                    // FLAG ESTADO BOMBA, 0 OFF 1 ON
 int Spelt = 0;                                    // FLAG ESTADO PELT, 0 OFF 1 ON
 int Svalv = 0;                                    // FLAG ESTADO VALV, 0 OFF 1 ON
@@ -104,7 +94,7 @@ long starttime = 0;                                  // TIEMPO INICIO DEBOUNCE
 //////////////////////////
 /////////WIFI AP//////////
 //////////////////////////
-const char* ssidAP = "INTERATICA19002001";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
+const char* ssidAP = "INTERATICA19002002";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
 const char* passwordAP = "interatica-4DVR";             //Definimos la contraseña de nuestro servidor
 ESP8266WebServer server(80);                            //Definimos el puerto de comunicaciones
 
@@ -112,8 +102,8 @@ ESP8266WebServer server(80);                            //Definimos el puerto de
 //////WIFI STA///////
 ////////////////////
 
-const char ssidSTA[] = "DEBUG";
-const char passwordSTA[] = "debug1234";
+const char ssidSTA[] = "DEBUG19002002";
+const char passwordSTA[] = "interatica-4DVR";
 
 
 //Funciones
@@ -143,52 +133,52 @@ void handleRoot() {
 //     This rutine is exicuted when you open its IP in browser
 //==============================================================
 void handleStatus() {
-//  String message = "";
-//  for (int i = 0; i < server.args(); i++) {
-//    message += "Arg nº" + (String)i + " –> ";
-//    message += server.argName(i) + ": ";
-//    message += server.arg(i) + "\n";
-//  }
-//  Serial.println(message);
+  //  String message = "";
+  //  for (int i = 0; i < server.args(); i++) {
+  //    message += "Arg nº" + (String)i + " –> ";
+  //    message += server.argName(i) + ": ";
+  //    message += server.arg(i) + "\n";
+  //  }
+  //  Serial.println(message);
 
   // Chequear si hay al menos un arg
-//  tiempo = server.arg(0).toInt();
-//  Serial.println("Tiempo: " + (String)tiempo);
+  //  tiempo = server.arg(0).toInt();
+  //  Serial.println("Tiempo: " + (String)tiempo);
 
   JSON();
   server.send(200, "text/plain", OUT);
 }
 
 void handlePump() {
+  if (inicie >= 1) {
 
-  // TODO: Chequear status
-  // TODO: Chequear si hay al menos un arg
-  tiempo = server.arg(0).toInt();
-  Serial.println("Pump con tiempo = " + (String)tiempo);
-  comando = 1;
-  Serial.println("Pase por Encendido Bomba");
-  tbomb = tiempo * 1000;                                                            //Conversion del tiempo en segundos a milisegundos
-  digitalWrite(Aire, HIGH);                                                         //Enciende Bomba
-  Tref_bomba = millis();                                                            //Activa le referencia del tiempo
-  Serial.println(Tref_bomba);
-  Serial.println ("Encendiendo Bomba");
-  Serial.println (tbomb);
-  treq1 = tbomb + Tref_bomba;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido la bomba
-  Serial.print("TIEMPO DE ENCENDIDO: ");
-  Serial.println(treq1);
-  tiempo = 0;                                                                      //Vacio la variable tiempo
-  Spump = 1;                                                                       //Activo FLAG para encendido de bomba
-  Svalv = 1;
-  JSON();
-  server.send(200, "text/plain", OUT);
+    tiempo = server.arg(0).toInt();
+    Serial.println("Pump con tiempo = " + (String)tiempo);
+    comando = 1;
+    Serial.println("Pase por Encendido Bomba");
+    tbomb = tiempo * 1000;                                                            //Conversion del tiempo en segundos a milisegundos
+    digitalWrite(Aire, HIGH);                                                         //Enciende Bomba
+    Tref_bomba = millis();                                                            //Activa le referencia del tiempo
+    Serial.println(Tref_bomba);
+    Serial.println ("Encendiendo Bomba");
+    Serial.println (tbomb);
+    treq1 = tbomb + Tref_bomba;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido la bomba
+    Serial.print("TIEMPO DE ENCENDIDO: ");
+    Serial.println(treq1);
+    tiempo = 0;                                                                      //Vacio la variable tiempo
+    Spump = 1;                                                                       //Activo FLAG para encendido de bomba
+    Svalv = 1;
+    JSON();
+    server.send(200, "text/plain", OUT);
+  }
 }
-
 void handlePeltier() {
-tiempo = server.arg(0).toInt();
+  if (inicie >= 1) {
+    tiempo = server.arg(0).toInt();
 
-  if (treq2 * 2 <= millis()) {
+    if (treq2 * 2 <= millis()) {
 
-  if (tiempo > 7) tiempo = 7;
+      if (tiempo > 7) tiempo = 7;
 
       comando = 1;
       Serial.println("Pase por Encendido Peltier");
@@ -202,38 +192,45 @@ tiempo = server.arg(0).toInt();
       Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
       JSON();
       server.send(200, "text/plain", OUT);
+    }
+    else {
+      comando = 0;
+      JSON();
+      server.send(200, "text/plain", OUT);
+    }
   }
 }
 
 void handleValve() {
-  tiempo = server.arg(0).toInt();
+  if (inicie >= 1) {
+    tiempo = server.arg(0).toInt();
 
-  if (tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
+    if (tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
 
-    comando = 1;
-    digitalWrite(Valv, HIGH);
-    Serial.println("Enciendo Valvula");
-    Svalv = 1;                                                                       //Flag de Valvula Encendida
-    JSON();
-    server.send(200, "text/plain", OUT);
+      comando = 1;
+      digitalWrite(Valv, HIGH);
+      Serial.println("Enciendo Valvula");
+      Svalv = 1;                                                                       //Flag de Valvula Encendida
+      JSON();
+      server.send(200, "text/plain", OUT);
+
+    }
+
+    else if (tiempo == 0) {                            // compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 0 para OFF
+      comando = 1;
+      digitalWrite(Valv, LOW);
+      Serial.println("Apagado Valvula");
+      Svalv = 0;                                                                        //Flag de Valvula Apagada
+      JSON();
+      server.send(200, "text/plain", OUT);
+    }
 
   }
-
-  else if (tiempo == 0) {                            // compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 0 para OFF
-    comando = 1;
-    digitalWrite(Valv, LOW);
-    Serial.println("Apagado Valvula");
-    Svalv = 0;                                                                        //Flag de Valvula Apagada
-    JSON();
-    server.send(200, "text/plain", OUT);
-  }
-
 }
 
 void handleInicio() {
   Estado = "B";
   comando = 1;
-  START = 1;
   inicie = 1;
   interruptCounter = 1;
   INICIO = 0;
@@ -251,7 +248,6 @@ void handleFin() {
   Serial.println("FIN DEL JUEGO");
   interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
   inicie = 0;                                                                     //Vacio Flag de que esta iniciado
-  START = 0;                                                                      //Vacio Flag que el juego esta corriendo
   JSON();
   server.send(200, "text/plain", OUT);
 
@@ -272,7 +268,7 @@ void setup(void) {
 
   WIFI_SETUP_AP();
 
-    millis();
+  millis();
 }
 
 //////////////////////////////////////
@@ -310,9 +306,18 @@ void loop(void) {
   Blink_FAULT_FAST();                                                           // Funcion de blinking rapido para led rojo
   Blink_OK_FAST();                                                              //Funcion de blinking rapido para led amarillo
 
+  if (interruptCounter == 0) {
+    Estado = "A";
+    digitalWrite(LEDOK, HIGH);
+  }
 
-  if (inicie >= 1) {             
+  else if (interruptCounter == 1) {
+    Estado = "B";
+    inicie = 1;
+  }
+
+  if (inicie >= 1) {
     Blink_OK_SLOW();
-     }
+  }
 
 }
