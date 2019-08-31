@@ -30,7 +30,7 @@ String ret;                                        // SERVER HTTP
 String IND;                                       //String status
 String OUT;
 String Estado;
-
+String VERSION = "0.9113";                             //VERSION
 //Chars comparativos
 
 char pump[5] = "pump";                             //NOMBRE PETICION BOMBA
@@ -58,7 +58,7 @@ int INICIO = 0;                                   // FLAG DE INICIO
 int PANIC = 0;                                    //FLAG BOTON PANICO
 int comando = 0;                                  //FLAG QUE SE INGRESO EL COMANDO CORRECTAMENTE 1 SI 0 NO
 int DEBUGMODE = 1 ;                                //MODO DEBUG 1 ON 0 OFF
-const float VER = 0.9112;                             //VERSION
+
 
 //Temporizadores
 
@@ -104,9 +104,9 @@ long starttime = 0;                                  // TIEMPO INICIO DEBOUNCE
 //////////////////////////
 /////////WIFI AP//////////
 //////////////////////////
-const char ssidAP[] = "Prueba 3";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
-const char passwordAP[] = "12345678";             //Definimos la contraseña de nuestro servidor
-WiFiServer server(80);                            //Definimos el puerto de comunicaciones
+const char* ssidAP = "INTERATICA19002001";                 //Definimos la SSDI de nuestro servidor WiFi -nombre de red-
+const char* passwordAP = "interatica-4DVR";             //Definimos la contraseña de nuestro servidor
+ESP8266WebServer server(80);                            //Definimos el puerto de comunicaciones
 
 //////////////////////
 //////WIFI STA///////
@@ -120,8 +120,6 @@ const char passwordSTA[] = "debug1234";
 
 void Temp();                                      //Proteccion de Temperatura por Sensor
 void Boton_Panico();                              //Boton de Start/STOP
-void CompareInicio();                             // Inicio
-void Acciones();                                  //Funcion Encendido Bomba
 void Bomba_Apagado();                             //Funcion Apagado Bomba
 void ApagadoPeltier();                            //Funcion Apagado Peltier
 void Reset();                                     // Funcion Pin RESET
@@ -131,111 +129,151 @@ void Blink_Fault_Slow ();                         //Funcion de blink lento para 
 void Blink_OK_SLOW();                             // Funcion de blink rapido para led amarillo
 void Blink_OK_FAST();                             //Funcion de blink lento para led amarillo
 void JSON();
+void WIFI_SETUP_AP();
+void WIFI_SETUP_STA();
 
+//==============================================================
+//     This rutine is exicuted when you open its IP in browser
+//==============================================================
+void handleRoot() {
+  server.send(200, "text/plain", "hello from esp8266!");
+}
 
+//==============================================================
+//     This rutine is exicuted when you open its IP in browser
+//==============================================================
+void handleStatus() {
+//  String message = "";
+//  for (int i = 0; i < server.args(); i++) {
+//    message += "Arg nº" + (String)i + " –> ";
+//    message += server.argName(i) + ": ";
+//    message += server.arg(i) + "\n";
+//  }
+//  Serial.println(message);
 
-void setup() {
+  // Chequear si hay al menos un arg
+//  tiempo = server.arg(0).toInt();
+//  Serial.println("Tiempo: " + (String)tiempo);
 
+  JSON();
+  server.send(200, "text/plain", OUT);
+}
 
-  //Declaracion de Pines
-  PINES();
+void handlePump() {
 
+  // TODO: Chequear status
+  // TODO: Chequear si hay al menos un arg
+  tiempo = server.arg(0).toInt();
+  Serial.println("Pump con tiempo = " + (String)tiempo);
+  comando = 1;
+  Serial.println("Pase por Encendido Bomba");
+  tbomb = tiempo * 1000;                                                            //Conversion del tiempo en segundos a milisegundos
+  digitalWrite(Aire, HIGH);                                                         //Enciende Bomba
+  Tref_bomba = millis();                                                            //Activa le referencia del tiempo
+  Serial.println(Tref_bomba);
+  Serial.println ("Encendiendo Bomba");
+  Serial.println (tbomb);
+  treq1 = tbomb + Tref_bomba;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido la bomba
+  Serial.print("TIEMPO DE ENCENDIDO: ");
+  Serial.println(treq1);
+  tiempo = 0;                                                                      //Vacio la variable tiempo
+  Spump = 1;                                                                       //Activo FLAG para encendido de bomba
+  Svalv = 1;
+  JSON();
+  server.send(200, "text/plain", OUT);
+}
 
-  //COMUNICACION AP Y STA
+void handlePeltier() {
+tiempo = server.arg(0).toInt();
 
-  server.begin();                                                         //Inicializacion de Servidor
-  WiFi.mode(WIFI_AP_STA);                                                 //Modo de Operacion AP para Access Point/ STA para Station
-  WiFi.softAP(ssidAP, passwordAP);                                        //Red con clave, en el canal 1 y visible
+  if (treq2 * 2 <= millis()) {
 
+  if (tiempo > 7) tiempo = 7;
 
-  IPAddress local_ip(192, 168, 1, 1);                                    //Modifica la dirección IP en modo AP de la caja
-  IPAddress gateway(192, 168, 1, 1);                                     // Gateway de AP la caja
-  IPAddress subnet(255, 255, 255, 0);                                    // Subnet del AP la caja
-  WiFi.softAPConfig(local_ip, gateway, subnet);
-
-
-  WiFi.begin(ssidSTA, passwordSTA);
-  if (WiFi.waitForConnectResult() == WL_CONNECTED) {
-
-
-    Serial.println("Connection Ok");
-    Serial.println(WiFi.localIP());
-
-    t_httpUpdate_return ret = ESPhttpUpdate.update("https://jramosp91.github.io/HeartFail.ino.nodemcu.bin", "", "70 0B 6F 62 4F 41 EB 1A 42 3F 73 5A DA 96 98 2D 7F 2B 75 6F");
-
-
-    switch (ret) {
-      case HTTP_UPDATE_FAILED:
-        Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s",  ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-        break;
-
-      case HTTP_UPDATE_NO_UPDATES:
-        Serial.println("HTTP_UPDATE_NO_UPDATES");
-        digitalWrite(LEDOK, HIGH);
-        digitalWrite(LEDFAULT, HIGH);
-        delay(10000);
-        digitalWrite(LEDOK, LOW);
-        digitalWrite(LEDFAULT, LOW);
-        break;
-
-      case HTTP_UPDATE_OK:
-
-        digitalWrite(LEDOK, HIGH);
-        delay(50);
-        digitalWrite(LEDFAULT, HIGH);
-        digitalWrite(LEDOK, LOW);
-        delay(150);
-        digitalWrite(LEDFAULT, LOW);
-        digitalWrite(LEDOK, HIGH);
-        delay(1000);
-
-        break;
-
-    }
-
-
-    //FLASH POR WIFI
-
-    ArduinoOTA.onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {
-        type = "sketch";
-      } else { // U_SPIFFS
-        type = "filesystem";
-      }
-
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
-    });
-    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) {
-        Serial.println("Auth Failed");
-      } else if (error == OTA_BEGIN_ERROR) {
-        Serial.println("Begin Failed");
-      } else if (error == OTA_CONNECT_ERROR) {
-        Serial.println("Connect Failed");
-      } else if (error == OTA_RECEIVE_ERROR) {
-        Serial.println("Receive Failed");
-      } else if (error == OTA_END_ERROR) {
-        Serial.println("End Failed");
-      }
-    });
-
-    ArduinoOTA.begin();
-
-
-    millis();
-
+      comando = 1;
+      Serial.println("Pase por Encendido Peltier");
+      tpelt = tiempo * 1000;
+      Tref_pelt = millis();
+      digitalWrite(Cale, HIGH);                                                        //Enciende Peltier
+      Serial.println ("Encendiendo Peltier");
+      Serial.println (tiempo);
+      treq2 = tpelt + Tref_pelt;                                                      //Suma la referencia del tiempo + el tiempo que se quiere tener encendido el peltier
+      tiempo = 0;
+      Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
+      JSON();
+      server.send(200, "text/plain", OUT);
   }
 }
 
+void handleValve() {
+  tiempo = server.arg(0).toInt();
+
+  if (tiempo == 1) {                            //compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 1 para ON
+
+    comando = 1;
+    digitalWrite(Valv, HIGH);
+    Serial.println("Enciendo Valvula");
+    Svalv = 1;                                                                       //Flag de Valvula Encendida
+    JSON();
+    server.send(200, "text/plain", OUT);
+
+  }
+
+  else if (tiempo == 0) {                            // compara que el buffer sea igual a la constante valv (para la valvula) y que TIEMPO sea 0 para OFF
+    comando = 1;
+    digitalWrite(Valv, LOW);
+    Serial.println("Apagado Valvula");
+    Svalv = 0;                                                                        //Flag de Valvula Apagada
+    JSON();
+    server.send(200, "text/plain", OUT);
+  }
+
+}
+
+void handleInicio() {
+  Estado = "B";
+  comando = 1;
+  START = 1;
+  inicie = 1;
+  interruptCounter = 1;
+  INICIO = 0;
+  JSON();
+  server.send(200, "text/plain", OUT);
+
+
+}
+
+void handleFin() {
+  comando = 1;
+  digitalWrite(Aire, LOW);                                                        //Apago Bomba
+  digitalWrite(Cale, LOW);                                                        //Apago peltier
+  digitalWrite(Valv, LOW);                                                        //Abro valvula
+  Serial.println("FIN DEL JUEGO");
+  interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
+  inicie = 0;                                                                     //Vacio Flag de que esta iniciado
+  START = 0;                                                                      //Vacio Flag que el juego esta corriendo
+  JSON();
+  server.send(200, "text/plain", OUT);
+
+}
+
+//===============================================================
+//                  SETUP
+//===============================================================
+void setup(void) {
+  Serial.begin(9600);
+  Serial.println("");
+
+  //Declaracion de Pines
+  Serial.println("Pines() ->");
+  PINES();
+
+  WIFI_SETUP_STA();
+
+  WIFI_SETUP_AP();
+
+    millis();
+}
 
 //////////////////////////////////////
 ///////////CONTADOR INTERRUPCION//////
@@ -252,23 +290,29 @@ void handleInterrupt() {
 
 }
 
-void loop() {                                                               //INICIALIZACION  MILLIS
+//===============================================================
+//                     LOOP
+//===============================================================
+void loop(void) {
+  server.handleClient();          //Handle client requests
 
   blinkS = millis();
   blinkFS = millis();
 
   ArduinoOTA.handle();                                                              //invoca si hay que flashear online
+  //  return;
 
 
   Reset();                                                                      // Funcion del boton reset
   Boton_Panico();                                                               //Boton de Start/STOP
-  CompareInicio();                                                              // Inicio
-  Temp();                                                                       //Proteccion de Temperatura por Sensor
-  Acciones();                                                                   //Funcion Encendido Bomba
   Bomba_Apagado();                                                              //Funcion Apagado Bomba
   ApagadoPeltier();                                                             //Funcion Apagado Peltier
   Blink_FAULT_FAST();                                                           // Funcion de blinking rapido para led rojo
   Blink_OK_FAST();                                                              //Funcion de blinking rapido para led amarillo
-  memset(estado_buffer, 0, sizeof(estado_buffer));                                  //vacia buffer
+
+
+  if (inicie >= 1) {             
+    Blink_OK_SLOW();
+     }
 
 }

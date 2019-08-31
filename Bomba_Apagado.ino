@@ -3,7 +3,6 @@ void Bomba_Apagado () {
   if (digitalRead(Aire) == 1 ) {
   }
 
-
   if (digitalRead(Aire) == 1 and millis() > treq1) {
 
     digitalWrite(Aire, LOW);
