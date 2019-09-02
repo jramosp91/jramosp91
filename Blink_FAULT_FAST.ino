@@ -1,6 +1,6 @@
 void Blink_FAULT_FAST() {
 
-  if (digitalRead(Cale) == 1) {
+  if (digitalRead(Cale) == 1 or Spelt ==1) {
 
     if (blinkFS - blinkFE >= BLINKF) {
 

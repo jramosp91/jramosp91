@@ -25,12 +25,11 @@ const int TEMPSENS = D2;                              // SENSOR DE TEMP
 String peticion;                                    // PETICION DEL CLIENTE
 String estado;                                      // DATO QUE ENVIA EL UNITY
 int tiempo;                                        // TIEMPO QUE ENVIA EL UNITY
-char estado_buffer[7];                             //BUFFER DATOS CHAR
 String ret;                                        // SERVER HTTP
 String IND;                                       //String status
-String OUT;
-String Estado;
-String VERSION = "0.9114";                             //VERSION
+String OUT;                                       //String de Ouput JSON
+String Estado;                                  //String de Stado
+const int VERSION = 0.9114;                             //VERSION
 
 //interrupciones
 
@@ -44,7 +43,6 @@ int Spump = 0;                                    // FLAG ESTADO BOMBA, 0 OFF 1 
 int Spelt = 0;                                    // FLAG ESTADO PELT, 0 OFF 1 ON
 int Svalv = 0;                                    // FLAG ESTADO VALV, 0 OFF 1 ON
 int RST = 0;                                      // FLAG RESET
-int INICIO = 0;                                   // FLAG DE INICIO
 int PANIC = 0;                                    //FLAG BOTON PANICO
 int comando = 0;                                  //FLAG QUE SE INGRESO EL COMANDO CORRECTAMENTE 1 SI 0 NO
 int DEBUGMODE = 1 ;                                //MODO DEBUG 1 ON 0 OFF
@@ -59,8 +57,7 @@ unsigned long treq2 = 0;                          // BUFFER DE TIEMPO PELTIER
 long tbomb = 0;                                   //TIEMPO DE ENCENDIDO BOMBA
 long tpelt = 0;                                   // TIEMPO ENCENDIDO BOMBA
 unsigned long treset = 0;                         //TIEMPO REF RESET
-unsigned long tpress = 2000;
-//TIEMPO PARA APRETAR Y RESET EN ms
+unsigned long tpress = 2000;                      //TIEMPO PARA APRETAR Y RESET EN ms
 
 //COOLDOWN
 
@@ -122,6 +119,26 @@ void JSON();
 void WIFI_SETUP_AP();
 void WIFI_SETUP_STA();
 
+
+//===============================================================
+//                  SETUP
+//===============================================================
+void setup(void) {
+  Serial.begin(9600);
+  Serial.println("");
+
+  //Declaracion de Pines
+  Serial.println("Pines() ->");
+  PINES();
+
+  WIFI_SETUP_STA();
+
+  WIFI_SETUP_AP();
+
+  millis();
+}
+
+
 //==============================================================
 //     This rutine is exicuted when you open its IP in browser
 //==============================================================
@@ -172,12 +189,31 @@ void handlePump() {
     JSON();
     server.send(200, "text/plain", OUT);
   }
+  else {
+    comando = 0;
+    JSON();
+    server.send(200, "text/plain", OUT);
+  }
 }
+
 void handlePeltier() {
   if (inicie >= 1) {
     tiempo = server.arg(0).toInt();
 
-    if (treq2 * 2 <= millis()) {
+    Serial.println("Se ingreso:");
+    Serial.println(tiempo);
+    Serial.println("TIEMPO DE ENCENDIDO:");
+    Serial.println(treq2 / 1000);
+
+    Serial.println("Pasaron");
+    Serial.println(millis() / 1000);
+
+    Serial.println("Tiempo de cooldown");
+    Serial.println ((treq2*2) / 1000);
+    Serial.println("FALTA PARA APAGARSE:");
+    Serial.println(((treq2*2)-treq2)/1000);
+    
+    if (millis() - Tref_pelt > ((treq2 - Tref_pelt) * 2)) {
 
       if (tiempo > 7) tiempo = 7;
 
@@ -193,8 +229,7 @@ void handlePeltier() {
       Spelt = 1;                                                                      //Activo FLAG para encendido de Peltier
       JSON();
       server.send(200, "text/plain", OUT);
-    }
-    else {
+    }  else {
       comando = 0;
       JSON();
       server.send(200, "text/plain", OUT);
@@ -202,7 +237,9 @@ void handlePeltier() {
   }
 }
 
+
 void handleValve() {
+
   if (inicie >= 1) {
     tiempo = server.arg(0).toInt();
 
@@ -227,26 +264,37 @@ void handleValve() {
     }
 
   }
+
+  else {
+    comando = 0;
+    JSON();
+    server.send(200, "text/plain", OUT);
+  }
 }
 
+
 void handleInicio() {
-  if (PANIC = ! 1) {
+ 
+  if (PANIC <  1) {
     Estado = "B";
     comando = 1;
     inicie = 1;
     interruptCounter = 1;
-    INICIO = 0;
+    JSON();
+    server.send(200, "text/plain", OUT);
+
   }
 
-  JSON();
-  server.send(200, "text/plain", OUT);
-
+  else {
+    JSON();
+    server.send(200, "text/plain", OUT);
+  }
 
 }
 
 void handleFin() {
-  
-  if (PANIC = ! 1) {
+
+  if (inicie >= 1 and PANIC < 1) {
     Estado = "A";
     comando = 1;
     digitalWrite(Aire, LOW);                                                        //Apago Bomba
@@ -255,29 +303,10 @@ void handleFin() {
     Serial.println("FIN DEL JUEGO");
     interruptCounter = 0;                                                           //Borro conteo del boton START/STOP
     inicie = 0;                                                                     //Vacio Flag de que esta iniciado
+    JSON();
+    server.send(200, "text/plain", OUT);
+
   }
-  
-  JSON();
-  server.send(200, "text/plain", OUT);
-
-}
-
-//===============================================================
-//                  SETUP
-//===============================================================
-void setup(void) {
-  Serial.begin(9600);
-  Serial.println("");
-
-  //Declaracion de Pines
-  Serial.println("Pines() ->");
-  PINES();
-
-  WIFI_SETUP_STA();
-
-  WIFI_SETUP_AP();
-
-  millis();
 }
 
 //////////////////////////////////////

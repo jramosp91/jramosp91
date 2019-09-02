@@ -10,7 +10,7 @@ void WIFI_SETUP_STA() {
     Serial.println("Connection Ok");
     Serial.println(WiFi.localIP());
     ESPhttpUpdate.rebootOnUpdate (false);
-    t_httpUpdate_return ret = ESPhttpUpdate.update("https://jramosp91.github.io/HeartFail.ino.INTERATICA19002004.bin", "", "70 0B 6F 62 4F 41 EB 1A 42 3F 73 5A DA 96 98 2D 7F 2B 75 6F");
+    t_httpUpdate_return ret = ESPhttpUpdate.update("https://jramosp91.github.io/HeartFail.ino.INTERATICA19002004v1.bin", "", "70 0B 6F 62 4F 41 EB 1A 42 3F 73 5A DA 96 98 2D 7F 2B 75 6F");
 
     Serial.println("llegue al switch");
     switch (ret) {
